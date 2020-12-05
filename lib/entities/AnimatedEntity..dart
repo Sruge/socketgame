@@ -104,7 +104,7 @@ class AnimatedEntity extends BaseView {
     int nextDuration = timeNow - _nextState[_stateIndex]["duration"];
     double nextX = playerState["x"] -
         characterState["x"] +
-        (screenSize.width + 2 * baseAnimationWidth()) / 2;
+        (screenSize.width - baseAnimationWidth()) / 2;
     double nextY = playerState["y"] -
         characterState["y"] +
         (screenSize.height - baseAnimationHeight()) / 2;

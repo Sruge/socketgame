@@ -1,9 +1,14 @@
-import 'package:socketgame/entities/entityData.dart';
-
 import 'AnimatedEntity..dart';
+import 'entityData.dart';
 
 class NPC extends AnimatedEntity {
-  NPC(_type, double x, double y, int dir)
+  String _type;
+  double x, y;
+  int id;
+  int _dir;
+
+  //A player and an opponent use the same sprite images
+  NPC(this.id, this.x, this.y, this._type, this._dir)
       : super(
             entityData['npcs'][_type]["imgUrl"],
             entityData['npcs'][_type]["txtWidth"],
@@ -12,5 +17,15 @@ class NPC extends AnimatedEntity {
             entityData['npcs'][_type]["rows"],
             x,
             y,
-            dir);
+            _dir);
+
+  factory NPC.fromJson(Map<String, dynamic> json) => NPC(json["id"],
+      json["x"].toDouble(), json["y"].toDouble(), json["type"], json["dir"]);
+
+  Map<String, dynamic> toJson() => {
+        "x": x,
+        "y": y,
+        "id": id,
+        "type": _type,
+      };
 }

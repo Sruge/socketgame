@@ -15,8 +15,8 @@ class Background extends BaseView {
   int _updateTime;
 
   Background(this._imgPath, double x, double y) {
-    double initialX = -x;
-    double initialY = -y;
+    double initialX = -x + screenSize.width / 2;
+    double initialY = -y + screenSize.height / 2;
     _updateTime = 0;
     List<double> initialState = [initialX, initialY, _updateTime.toDouble()];
     _nextState = [initialState, initialState];
@@ -43,8 +43,8 @@ class Background extends BaseView {
     if (dy != 0) {
       velY = dy * timeFactor / (dx.abs() + dy.abs()) * 10;
     }
-    if (dx > 0 && _entity.x + velX > _nextState[1 - _stateIndex][0] ||
-        dx < 0 && _entity.x + velX < _nextState[1 - _stateIndex][0]) {
+    if (dx < 0 && _entity.x + velX < _nextState[1 - _stateIndex][0] ||
+        dx > 0 && _entity.x + velX > _nextState[1 - _stateIndex][0]) {
       velX = 0;
     }
     if (dy > 0 && _entity.y + velY > _nextState[1 - _stateIndex][1] ||
@@ -63,8 +63,8 @@ class Background extends BaseView {
 
     _previousState[_stateIndex] = _nextState[_stateIndex];
     double nextDuration = duration.toDouble();
-    double nextX = -characterState["x"];
-    double nextY = -characterState["y"];
+    double nextX = -characterState["x"] + screenSize.width / 2;
+    double nextY = -characterState["y"] + screenSize.height / 2;
 
     _nextState[_stateIndex][0] = nextX;
     _nextState[_stateIndex][1] = nextY;

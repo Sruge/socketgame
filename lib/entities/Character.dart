@@ -22,8 +22,6 @@ class Character {
   AnimationComponent _entityStdRight;
   AnimationComponent _activeEntity;
 
-  List<Map<String, dynamic>> _nextState;
-  List<Map<String, dynamic>> _previousState;
   //A player and an opponent use the same sprite images
   Character(this.id, this._type, double x, double y, int dir) {
     String _animationPath = entityData['opponents'][_type]["imgUrl"];

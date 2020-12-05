@@ -28,8 +28,8 @@ Map entityData = {
       "imgUrl": "priest.png",
       "txtWidth": 32,
       "txtHeight": 48,
-      "cols": 1,
-      "rows": 1,
+      "cols": 4,
+      "rows": 8,
       "width": baseAnimationWidth,
       "height": baseAnimationHeight
     }

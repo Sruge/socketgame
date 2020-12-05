@@ -16,7 +16,7 @@ class MMOGame extends Game with TapDetector {
   Function _fn;
   int _playerId;
   Map playerData;
-  Playground state;
+  Playground playground;
   Socket socket;
   StringBuffer _buffer;
 
@@ -29,9 +29,9 @@ class MMOGame extends Game with TapDetector {
   }
 
   Future<void> _init(double t) async {
-    state = Playground();
-    state.players = [];
-    state.gametime = 0;
+    playground = Playground();
+    playground.players = [];
+    playground.gametime = 0;
     _fn = _update;
     _buffer = StringBuffer("");
 
@@ -68,11 +68,11 @@ class MMOGame extends Game with TapDetector {
   }
 
   void _update(double t) {
-    state.update(t);
+    playground.update(t);
   }
 
   void render(Canvas canvas) {
-    state.render(canvas);
+    playground.render(canvas);
   }
 
   void update(double t) {
@@ -81,7 +81,7 @@ class MMOGame extends Game with TapDetector {
 
   void resize(Size size) {
     screenSize = size;
-    state.resize();
+    playground.resize();
   }
 
   void onSocketEvent(String event) {
@@ -93,7 +93,7 @@ class MMOGame extends Game with TapDetector {
       } else if (event[i] == ";") {
         String updateString = _buffer.toString();
         _buffer.clear();
-        state.updateState(updateString, _playerId);
+        playground.updateState(updateString, _playerId);
       } else {
         _buffer.write(event[i]);
       }

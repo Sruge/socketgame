@@ -42,8 +42,8 @@ def main_thread():
 	while True:
 		try:
 			game_time = time.time()
-			game.update_players()
-			data = json.dumps({"players": game.return_state(), "gametime": game_time}) + ";" 
+			game.update()
+			data = json.dumps({"gamestate": game.return_state(), "gametime": game_time}) + ";" 
 			send_data = data
 
 			# send data back to clients
