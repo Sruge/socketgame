@@ -17,9 +17,9 @@ class Game:
         self.bullets = {}
         self.npc_id = 0
         self.minX = 0
-        self.maxX = 1000
+        self.maxX = 60000
         self.minY = 0
-        self.maxY = 500
+        self.maxY = 2000
         
     def add_player(self, id):
         self.players[id] = Player(id, 10.0, 10.0, 300, 300, "elf")

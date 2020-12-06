@@ -20,6 +20,7 @@ class AnimatedEntity extends BaseView {
 
   List<Map<String, dynamic>> _nextState;
   List<Map<String, dynamic>> _previousState;
+  Map<String, dynamic> initialState;
   int _stateIndex = 0;
 
   String _animationPath;
@@ -28,14 +29,6 @@ class AnimatedEntity extends BaseView {
   double _velX, _velY;
   AnimatedEntity(this._animationPath, this._txtWidth, this._txtHeight,
       this._cols, this._rows, double x, double y, int dir) {
-    Map<String, dynamic> initialState = {
-      "x": x,
-      "y": y,
-      "dir": dir,
-      "duration": DateTime.now().millisecondsSinceEpoch
-    };
-    _previousState = [initialState, initialState];
-    _nextState = [initialState, initialState];
     _velX = _velY = 0;
 
     double stepSize = 0.1;
@@ -79,10 +72,20 @@ class AnimatedEntity extends BaseView {
     double dy = _nextState[1 - _stateIndex]["y"] - _activeEntity.y;
 
     if (dx != 0) {
-      _velX = dx * timeFactor / (dx.abs() + dy.abs()) * 10;
+      _velX = dx *
+          timeFactor /
+          (dx.abs() + dy.abs()) *
+          250 *
+          screenSize.width /
+          20000;
     }
     if (dx != 0) {
-      _velY = dy * timeFactor / (dx.abs() + dy.abs()) * 10;
+      _velY = dy *
+          timeFactor /
+          (dx.abs() + dy.abs()) *
+          125 *
+          screenSize.height /
+          10000;
     }
     if (dx > 0 && _activeEntity.x + _velX > _nextState[1 - _stateIndex]["x"] ||
         dx < 0 && _activeEntity.x + _velX < _nextState[1 - _stateIndex]["x"]) {
@@ -102,11 +105,11 @@ class AnimatedEntity extends BaseView {
 
     _previousState[_stateIndex] = _nextState[_stateIndex];
     int nextDuration = timeNow - _nextState[_stateIndex]["duration"];
-    double nextX = playerState["x"] -
-        characterState["x"] +
+    double nextX = (screenSize.width / 20000) * playerState["x"] -
+        (screenSize.width / 20000) * characterState["x"] +
         (screenSize.width - baseAnimationWidth()) / 2;
-    double nextY = playerState["y"] -
-        characterState["y"] +
+    double nextY = (screenSize.height / 10000) * playerState["y"] -
+        (screenSize.height / 10000) * characterState["y"] +
         (screenSize.height - baseAnimationHeight()) / 2;
     int nextDirection = playerState["dir"];
 
@@ -147,6 +150,8 @@ class AnimatedEntity extends BaseView {
   }
 
   void resize() {
+    _previousState = [initialState, initialState];
+    _nextState = [initialState, initialState];
     _activeEntity.width = baseAnimationWidth();
     _activeEntity.height = baseAnimationHeight();
 

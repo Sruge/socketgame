@@ -58,8 +58,10 @@ class MMOGame extends Game with TapDetector {
   }
 
   void onTapDown(TapDownDetails details) {
-    double x = (details.globalPosition.dx - screenSize.width / 2);
-    double y = (details.globalPosition.dy - screenSize.height / 2);
+    double x = (details.globalPosition.dx - screenSize.width / 2) /
+        (screenSize.width / 2);
+    double y = (details.globalPosition.dy - screenSize.height / 2) /
+        (screenSize.height / 2);
     Map<String, dynamic> destination = {
       "x": x,
       "y": y,

@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:socketgame/entities/Background.dart';
 import 'package:socketgame/entities/Character.dart';
 import 'package:socketgame/entities/NPC.dart';
+import 'package:socketgame/views/utils/SizeHolder.dart';
 
 import 'entities/Player.dart';
 
@@ -26,35 +27,39 @@ class Playground {
     if (_char != null) {
       _char.update(t, serverT);
       _bg.update(t, serverT);
+
+      players.forEach((element) {
+        element.update(t, serverT);
+      });
+      npcs.forEach((element) {
+        element.update(t, serverT);
+      });
     }
-    players.forEach((element) {
-      element.update(t, serverT);
-    });
-    npcs.forEach((element) {
-      element.update(t, serverT);
-    });
   }
 
   void render(Canvas canvas) {
     if (_char != null) {
       _bg.render(canvas);
       _char.render(canvas);
+
+      players.forEach((element) {
+        element.render(canvas);
+      });
+      npcs.forEach((element) {
+        element.render(canvas);
+      });
     }
-    players.forEach((element) {
-      element.render(canvas);
-    });
-    npcs.forEach((element) {
-      element.render(canvas);
-    });
   }
 
   void resize() {
-    players.forEach((element) {
-      element.resize();
-    });
-    npcs.forEach((element) {
-      element.resize();
-    });
+    if (_char != null) {
+      players.forEach((element) {
+        element.resize();
+      });
+      npcs.forEach((element) {
+        element.resize();
+      });
+    }
   }
 
   void updateState(String state, int id) {
@@ -93,9 +98,7 @@ class Playground {
         if (nextPlState["id"] != id && isNewPlayer) {
           print(
               "New Player since last state update: " + nextPlState.toString());
-          Player playerToAdd = Player.fromJson(nextPlState);
-          playerToAdd.resize();
-          this.players.add(playerToAdd);
+          addPlayer(nextPlState, nextCharState);
         }
       }
 
@@ -110,15 +113,45 @@ class Playground {
               isNewNpc = false;
             }
           });
-          if (nextNpcState["id"] != id && isNewNpc) {
-            print("New Player since last state update: " +
-                nextNpcState.toString());
-            NPC npcToAdd = NPC.fromJson(nextNpcState);
-            npcToAdd.resize();
-            this.npcs.add(npcToAdd);
+          if (isNewNpc) {
+            print(
+                "New NPC since last state update: " + nextNpcState.toString());
+            addNPC(nextNpcState, nextCharState);
           }
         }
       }
     }
+  }
+
+  void addPlayer(var nextPlState, var nextCharState) {
+    Player playerToAdd = Player.fromJson(nextPlState);
+    playerToAdd.initialState = {
+      "x": (nextPlState["x"] * screenSize.width / 20000) +
+          (screenSize.width - baseAnimationWidth()) / 2 -
+          (nextCharState["x"] * screenSize.width / 20000),
+      "y": (nextPlState["y"] * screenSize.height / 10000) +
+          (screenSize.height - baseAnimationHeight()) / 2 -
+          (nextCharState["y"] * screenSize.height / 10000),
+      "dir": nextPlState["dir"],
+      "duration": DateTime.now().millisecondsSinceEpoch
+    };
+    playerToAdd.resize();
+    this.players.add(playerToAdd);
+  }
+
+  void addNPC(var nextNpcState, var nextCharState) {
+    NPC npcToAdd = NPC.fromJson(nextNpcState);
+    npcToAdd.initialState = {
+      "x": (nextNpcState["x"] * screenSize.width / 20000) +
+          (screenSize.width - baseAnimationWidth()) / 2 -
+          (nextCharState["x"] * screenSize.width / 20000),
+      "y": (nextNpcState["y"] * screenSize.height / 10000) +
+          (screenSize.height - baseAnimationHeight()) / 2 -
+          (nextCharState["y"] * screenSize.height / 10000),
+      "dir": nextNpcState["dir"],
+      "duration": DateTime.now().millisecondsSinceEpoch
+    };
+    npcToAdd.resize();
+    this.npcs.add(npcToAdd);
   }
 }
