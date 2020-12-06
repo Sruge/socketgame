@@ -4,6 +4,7 @@ import json
 
 class Player:
     def __init__(self, id, x, y, health, maxHealth, pltype):
+        self.lifestate = 1
         self.x = x
         self.y = y
         self.destination_x = x
@@ -16,10 +17,9 @@ class Player:
         #directions: 0 is left, 1 up, 2 right, 3 down (walking) and the next 4 are the same (standing)
         self.direction = 7
         self.pltype = pltype
-        self.lifestate = 1
         self.rect = pygame.Rect((x,y),(1000,1200))
         
-    def update(self, time):
+    def update(self):
         if (abs(self.vel_y * 0.7) > abs(self.vel_x)):
             if (self.vel_y > 0):
                 self.direction = 3

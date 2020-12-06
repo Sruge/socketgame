@@ -2,6 +2,7 @@ import pygame
 
 class NPC:
     def __init__(self, id, x, y, health, maxHealth, pltype):
+        self.lifestate = 1
         self.x = x
         self.y = y
         self.destination_x = x
@@ -12,14 +13,13 @@ class NPC:
         self.maxHealth = 300
         self.speed = 5
         self.id = id
-        self.lifestate = 1
         #directions: 0 is left, 1 up, 2 right, 3 down (walking) and the next 4 are the same (standing)
         self.direction = 7
         self.pltype = pltype
         self.rect = pygame.Rect((x,y),(32,48))
         
        
-    def update(self, time):
+    def update(self):
         if (abs(self.vel_y * 0.7) > abs(self.vel_x)):
             if (self.vel_y > 0):
                 self.direction = 3

@@ -72,7 +72,6 @@ def threaded_client(conn, _id):
 	name = data.decode("utf-8")
 	print("[LOG]", name, "connected to the server.")
 	game.add_player(current_id)
-	print("[LOG]", name, "got a new player with id", current_id)
 
 	id_string = (f"#{current_id}")
 
@@ -87,7 +86,6 @@ def threaded_client(conn, _id):
 				break
 
 
-			print("Got client input from: ", current_id, ": ", data.decode("utf-8"))
 			player_data = json.loads(data.decode("utf-8"))
 			mode = player_data["mode"]
 			dest_x = player_data["x"]
@@ -97,7 +95,6 @@ def threaded_client(conn, _id):
 			elif (mode == "CharacterMode.Attack"):
 				game.add_bullet(current_id, dest_x, dest_y)
 			else:
-				print("An unknown MODE has been sent to the server")
 
 			
 			

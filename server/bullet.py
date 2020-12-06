@@ -4,6 +4,7 @@ import json
 
 class Bullet:
     def __init__(self, id, x, y, dest_x, dest_y, bullettype):
+        self.lifestate = 1
         self.x = x
         self.y = y
         self.destination_x = dest_x
@@ -13,11 +14,10 @@ class Bullet:
         self.id = id
         self.bullettype = bullettype
         self.rect = pygame.Rect((x,y ),(200,200))
-        self.lifestate = 1
         self.lifetime = 40
         self.timer = 0
 
-    def update(self, time):
+    def update(self):
         print("Bullet update in progress: ", self.timer, self.lifestate, self.rect)
         self.timer += 1
         if (self.timer > self.lifetime):

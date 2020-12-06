@@ -43,25 +43,16 @@ class Game:
             self.add_npc()
 
         #remove dead players and update the others
-        for key in self.players:
-            if (self.players[key].lifestate == 0):
-                del self.players[key]
-            else:
-                self.players[key].update(2)
+        self.players = dict([val for val in self.players.items() if val[0] != 0])
+        [val.update() for val in self.players.values()]
         
         #remove dead npcs and update the others
-        for key in self.npcs:
-            if (self.npcs[key].lifestate == 0):
-                del self.npcs[key]
-            else:
-                self.npcs[key].update(2)
+        self.npcs = dict([val for val in self.npcs.items() if val[0] != 0])
+        [npc.update() for npc in self.npcs.values()]
 
         #remove dead bullets and update the others
-        for key in self.bullets:
-            if (self.bullets[key].lifestate == 0):
-                del self.bullets[key]
-            else:
-                self.bullets[key].update(2)
+        self.bullets = dict([val for val in self.bullets.items() if val[0] != 0])
+        [val.update() for val in self.bullets.values()]
 
         self.check_bullets_collissions()
 
@@ -72,7 +63,6 @@ class Game:
         for bullet in self.bullets.items():
             print(bullet[1].rect.center)
             hitPlayer = bullet[1].rect.collidelist([player[1].rect for player in self.players.items()])
-            print("Somebody has been hit: ", hitPlayer)
 
             
     def return_state(self):
