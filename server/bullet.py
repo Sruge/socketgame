@@ -18,7 +18,6 @@ class Bullet:
         self.timer = 0
 
     def update(self):
-        print("Bullet update in progress: ", self.timer, self.lifestate, self.rect)
         self.timer += 1
         if (self.timer > self.lifetime):
             self.lifestate = 0
