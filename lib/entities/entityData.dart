@@ -12,6 +12,13 @@ Map entityData = {
       "height": screenSize.height / 3
     }
   },
+  "bullets": {
+    "standard": {
+      "imgUrl": "bullet.png",
+      "width": screenSize.width * 0.01,
+      "height": screenSize.width * 0.01
+    }
+  },
   "opponents": {
     "elf": {
       "imgUrl": "elf2.png",

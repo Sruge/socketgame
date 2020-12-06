@@ -88,10 +88,16 @@ def threaded_client(conn, _id):
 
 
 			print("Got client input from: ", current_id, ": ", data.decode("utf-8"))
-			dest = json.loads(data.decode("utf-8"))
-			dest_x = dest["x"]
-			dest_y = dest["y"]
-			game.set_destination(current_id, dest_x, dest_y)
+			player_data = json.loads(data.decode("utf-8"))
+			mode = player_data["mode"]
+			dest_x = player_data["x"]
+			dest_y = player_data["y"]
+			if (mode == "CharacterMode.Walk"):
+				game.set_destination(current_id, dest_x, dest_y)
+			elif (mode == "CharacterMode.Attack"):
+				game.add_bullet(current_id, dest_x, dest_y)
+			else:
+				print("An unknown MODE has been sent to the server")
 
 			
 			

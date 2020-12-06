@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flame/animation.dart';
@@ -6,7 +7,7 @@ import 'package:flame/spritesheet.dart';
 import 'package:socketgame/views/BaseView.dart';
 import 'package:socketgame/views/utils/SizeHolder.dart';
 
-class AnimatedEntity extends BaseView {
+class AnimatedEntity {
   Animation animationRunningDown;
   Animation animationRunningLeft;
   Animation animationRunningUp;
@@ -22,6 +23,7 @@ class AnimatedEntity extends BaseView {
   List<Map<String, dynamic>> _previousState;
   Map<String, dynamic> initialState;
   int _stateIndex = 0;
+  Random _random;
 
   String _animationPath;
   double gameTime;
@@ -31,38 +33,45 @@ class AnimatedEntity extends BaseView {
       this._cols, this._rows, double x, double y, int dir) {
     _velX = _velY = 0;
 
+    _random = Random();
     double stepSize = 0.1;
+    // they all whip up and down equally which is not nice
+    double _randomStandingStepSize = 1.6 + _random.nextDouble() / 2;
     SpriteSheet spriteSheet = SpriteSheet(
         imageName: _animationPath,
         textureWidth: _txtWidth,
         textureHeight: _txtHeight,
         columns: _cols,
         rows: _rows);
-    animationRunningDown =
-        spriteSheet.createAnimation(0, stepTime: stepSize * 1.5);
-    animationRunningLeft =
-        spriteSheet.createAnimation(1, stepTime: stepSize * 1.5);
-    animationRunningRight =
-        spriteSheet.createAnimation(2, stepTime: stepSize * 1.5);
-    animationRunningUp =
-        spriteSheet.createAnimation(3, stepTime: stepSize * 1.5);
-    animationStandingDown =
-        spriteSheet.createAnimation(4, stepTime: stepSize * 1.5);
-    animationStandingLeft =
-        spriteSheet.createAnimation(5, stepTime: stepSize * 1.5);
-    animationStandingUp =
-        spriteSheet.createAnimation(7, stepTime: stepSize * 1.5);
-    animationStandingRight =
-        spriteSheet.createAnimation(6, stepTime: stepSize * 1.5);
+    animationRunningDown = spriteSheet.createAnimation(0, stepTime: stepSize);
+    animationRunningLeft = spriteSheet.createAnimation(1, stepTime: stepSize);
+    animationRunningRight = spriteSheet.createAnimation(2, stepTime: stepSize);
+    animationRunningUp = spriteSheet.createAnimation(3, stepTime: stepSize);
+    animationStandingDown = spriteSheet.createAnimation(4,
+        stepTime: stepSize * _randomStandingStepSize);
+    animationStandingLeft = spriteSheet.createAnimation(5,
+        stepTime: stepSize * _randomStandingStepSize);
+    animationStandingUp = spriteSheet.createAnimation(7,
+        stepTime: stepSize * _randomStandingStepSize);
+    animationStandingRight = spriteSheet.createAnimation(6,
+        stepTime: stepSize * _randomStandingStepSize);
     _activeEntity = AnimationComponent(0, 0, animationStandingDown);
   }
 
-  void render(Canvas canvas) {
-    _activeEntity.x = _activeEntity.x + _velX;
-    _activeEntity.y = _activeEntity.y + _velY;
-    canvas.save();
-    _activeEntity.render(canvas);
-    canvas.restore();
+  void render(Canvas canvas, bool upperHalf) {
+    if (upperHalf) {
+      if (_activeEntity.y + baseAnimationHeight() / 2 < screenSize.height / 2) {
+        canvas.save();
+        _activeEntity.render(canvas);
+        canvas.restore();
+      }
+    } else {
+      if (_activeEntity.y + baseAnimationHeight() / 2 > screenSize.height / 2) {
+        canvas.save();
+        _activeEntity.render(canvas);
+        canvas.restore();
+      }
+    }
   }
 
   void update(double t, double serverT) {
@@ -95,6 +104,9 @@ class AnimatedEntity extends BaseView {
         dy < 0 && _activeEntity.y + _velY < _nextState[1 - _stateIndex]["y"]) {
       _velY = 0;
     }
+
+    _activeEntity.x = _activeEntity.x + _velX;
+    _activeEntity.y = _activeEntity.y + _velY;
 
     _activeEntity.animation.update(t);
   }

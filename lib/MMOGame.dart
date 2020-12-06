@@ -10,7 +10,7 @@ import 'package:flutter/widgets.dart';
 import 'package:socketgame/Playground.dart';
 import 'package:socketgame/views/utils/SizeHolder.dart';
 
-MMOGame myGame = MMOGame();
+MMOGame mmoGame = MMOGame();
 
 class MMOGame extends Game with TapDetector {
   Function _fn;
@@ -58,15 +58,11 @@ class MMOGame extends Game with TapDetector {
   }
 
   void onTapDown(TapDownDetails details) {
-    double x = (details.globalPosition.dx - screenSize.width / 2) /
-        (screenSize.width / 2);
-    double y = (details.globalPosition.dy - screenSize.height / 2) /
-        (screenSize.height / 2);
-    Map<String, dynamic> destination = {
-      "x": x,
-      "y": y,
-    };
-    socket.add(utf8.encode(jsonEncode(destination)));
+    // double x = (details.globalPosition.dx - screenSize.width / 2) /
+    //     (screenSize.width / 2);
+    // double y = (details.globalPosition.dy - screenSize.height / 2) /
+    //     (screenSize.height / 2);
+    playground.onTapDown(details);
   }
 
   void _update(double t) {
@@ -100,5 +96,14 @@ class MMOGame extends Game with TapDetector {
         _buffer.write(event[i]);
       }
     }
+  }
+
+  void addToSocket(String mode, double x, double y) {
+    Map<String, dynamic> destination = {
+      "mode": mode,
+      "x": x,
+      "y": y,
+    };
+    socket.add(utf8.encode(jsonEncode(destination)));
   }
 }

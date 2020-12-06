@@ -5,7 +5,7 @@ import 'package:flame/sprite.dart';
 import 'package:socketgame/views/BaseView.dart';
 import 'package:socketgame/views/utils/SizeHolder.dart';
 
-class Background extends BaseView {
+class Background {
   static double stepSize;
   PositionComponent _entity;
   String _imgPath;

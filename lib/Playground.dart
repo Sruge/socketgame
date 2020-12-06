@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'dart:ui';
 
+import 'package:flutter/widgets.dart';
 import 'package:socketgame/entities/Background.dart';
 import 'package:socketgame/entities/Character.dart';
 import 'package:socketgame/entities/NPC.dart';
 import 'package:socketgame/views/utils/SizeHolder.dart';
 
+import 'entities/Bullet.dart';
 import 'entities/Player.dart';
 
 class Playground {
@@ -14,6 +16,7 @@ class Playground {
   double gametime;
   List<Player> players;
   List<NPC> npcs;
+  List<Bullet> bullets;
   Character _char;
 
   Playground({
@@ -21,6 +24,13 @@ class Playground {
     this.gametime,
   }) {
     npcs = [];
+    bullets = [];
+  }
+
+  void onTapDown(TapDownDetails details) {
+    if (_char != null) {
+      _char.onTapDown(details);
+    }
   }
 
   void update(double t) {
@@ -34,20 +44,44 @@ class Playground {
       npcs.forEach((element) {
         element.update(t, serverT);
       });
+      bullets.forEach((element) {
+        element.update(t, serverT);
+      });
     }
   }
 
   void render(Canvas canvas) {
     if (_char != null) {
       _bg.render(canvas);
-      _char.render(canvas);
 
+      bullets.forEach((element) {
+        element.render(canvas, true);
+      });
+
+      //render the entities in the upper half first so they are behind the char
       players.forEach((element) {
-        element.render(canvas);
+        element.render(canvas, true);
       });
       npcs.forEach((element) {
-        element.render(canvas);
+        element.render(canvas, true);
       });
+
+      //render the char in the middle
+      _char.renderChar(canvas);
+      //render the entities in the lower half after the char so they are in front
+      players.forEach((element) {
+        element.render(canvas, false);
+      });
+      npcs.forEach((element) {
+        element.render(canvas, false);
+      });
+
+      //On top of all the players and enemys we render the bullets
+      bullets.forEach((element) {
+        element.render(canvas, true);
+      });
+      //At the very end render the interface
+      _char.renderInterface(canvas);
     }
   }
 
@@ -57,6 +91,9 @@ class Playground {
         element.resize();
       });
       npcs.forEach((element) {
+        element.resize();
+      });
+      bullets.forEach((element) {
         element.resize();
       });
     }
@@ -85,45 +122,70 @@ class Playground {
         this._char.updateState(nextCharState);
         this._bg.updateState(nextCharState);
       }
-
+      List<Player> updatedPlayers = [];
       for (var nextPlState in nextPlayers.values) {
-        var isNewPlayer = true;
+        bool isNewPlayer = true;
         this.players.forEach((previousPlayer) {
           if (nextPlState["id"] != id &&
               previousPlayer.id == nextPlState["id"]) {
             previousPlayer.updateState(nextCharState, nextPlState);
+            updatedPlayers.add(previousPlayer);
             isNewPlayer = false;
           }
         });
         if (nextPlState["id"] != id && isNewPlayer) {
           print(
               "New Player since last state update: " + nextPlState.toString());
-          addPlayer(nextPlState, nextCharState);
+          updatedPlayers.add(addPlayer(nextPlState, nextCharState));
         }
       }
+      players = updatedPlayers;
 
       var nextNpcs = nextState["gamestate"]["npcs"];
+      List<NPC> updatedNpcs = [];
       if (nextNpcs != null) {
         for (var nextNpcState in nextNpcs.values) {
-          var isNewNpc = true;
+          bool isNewNpc = true;
           this.npcs.forEach((previousNpc) {
-            if (nextNpcState["id"] != id &&
-                previousNpc.id == nextNpcState["id"]) {
+            if (previousNpc.id == nextNpcState["id"]) {
               previousNpc.updateState(nextCharState, nextNpcState);
+              updatedNpcs.add(previousNpc);
               isNewNpc = false;
             }
           });
           if (isNewNpc) {
             print(
                 "New NPC since last state update: " + nextNpcState.toString());
-            addNPC(nextNpcState, nextCharState);
+            updatedNpcs.add(addNPC(nextNpcState, nextCharState));
           }
         }
       }
+      npcs = updatedNpcs;
+
+      var nextBullets = nextState["gamestate"]["bullets"];
+      List<Bullet> updatedBullets = [];
+      if (nextBullets != null) {
+        for (var nextBulletState in nextBullets.values) {
+          bool isNewBullet = true;
+          this.bullets.forEach((previousBullet) {
+            if (previousBullet.id == nextBulletState["id"]) {
+              previousBullet.updateState(nextCharState, nextBulletState);
+              updatedBullets.add(previousBullet);
+              isNewBullet = false;
+            }
+          });
+          if (isNewBullet) {
+            print("New Bullet since last state update: " +
+                nextBulletState.toString());
+            updatedBullets.add(addBullet(nextBulletState, nextCharState));
+          }
+        }
+      }
+      bullets = updatedBullets;
     }
   }
 
-  void addPlayer(var nextPlState, var nextCharState) {
+  Player addPlayer(var nextPlState, var nextCharState) {
     Player playerToAdd = Player.fromJson(nextPlState);
     playerToAdd.initialState = {
       "x": (nextPlState["x"] * screenSize.width / 20000) +
@@ -136,10 +198,10 @@ class Playground {
       "duration": DateTime.now().millisecondsSinceEpoch
     };
     playerToAdd.resize();
-    this.players.add(playerToAdd);
+    return playerToAdd;
   }
 
-  void addNPC(var nextNpcState, var nextCharState) {
+  NPC addNPC(var nextNpcState, var nextCharState) {
     NPC npcToAdd = NPC.fromJson(nextNpcState);
     npcToAdd.initialState = {
       "x": (nextNpcState["x"] * screenSize.width / 20000) +
@@ -152,6 +214,21 @@ class Playground {
       "duration": DateTime.now().millisecondsSinceEpoch
     };
     npcToAdd.resize();
-    this.npcs.add(npcToAdd);
+    return npcToAdd;
+  }
+
+  Bullet addBullet(var nextBulletState, var nextCharState) {
+    Bullet bulletToAdd = Bullet.fromJson(nextBulletState);
+    bulletToAdd.initialState = {
+      "x": (nextBulletState["x"] * screenSize.width / 20000) +
+          (screenSize.width - screenSize.width * 0.01) / 2 -
+          (nextCharState["x"] * screenSize.width / 20000),
+      "y": (nextBulletState["y"] * screenSize.height / 10000) +
+          (screenSize.height - screenSize.height * 0.02) / 2 -
+          (nextCharState["y"] * screenSize.height / 10000),
+      "duration": DateTime.now().millisecondsSinceEpoch
+    };
+    bulletToAdd.resize();
+    return bulletToAdd;
   }
 }

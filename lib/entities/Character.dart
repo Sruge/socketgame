@@ -3,144 +3,148 @@ import 'dart:ui';
 import 'package:flame/animation.dart';
 import 'package:flame/components/animation_component.dart';
 import 'package:flame/spritesheet.dart';
+import 'package:flutter/gestures.dart';
+import 'package:socketgame/MMOGame.dart';
+import 'package:socketgame/entities/healthbars/CharHealthbar.dart';
+import 'package:socketgame/entities/interface/CharacterMode.dart';
+import 'package:socketgame/entities/interface/InterfaceBtnBar.dart';
 import 'package:socketgame/views/utils/SizeHolder.dart';
-
-import 'AnimatedEntity..dart';
 import 'entityData.dart';
 
 class Character {
   String _type;
   int id;
+  int _maxHealth;
+  int _health;
+  int _score, _coins;
 
-  AnimationComponent _entityRnDown;
-  AnimationComponent _entityRnLeft;
-  AnimationComponent _entityRnUp;
-  AnimationComponent _entityRnRight;
-  AnimationComponent _entityStdDown;
-  AnimationComponent _entityStdLeft;
-  AnimationComponent _entityStdUp;
-  AnimationComponent _entityStdRight;
+  Animation animationRunningDown;
+  Animation animationRunningLeft;
+  Animation animationRunningRight;
+  Animation animationRunningUp;
+  Animation animationStandingDown;
+  Animation animationStandingLeft;
+  Animation animationStandingUp;
+  Animation animationStandingRight;
   AnimationComponent _activeEntity;
+  CharHealthbar _healthbar;
+  InterfaceBtnBar _btnbar;
 
   //A player and an opponent use the same sprite images
-  Character(this.id, this._type, double x, double y, int dir) {
+  Character(this.id, this._type, this._health, this._maxHealth, int dir) {
     String _animationPath = entityData['opponents'][_type]["imgUrl"];
     int _txtWidth = entityData['opponents'][_type]["txtWidth"];
     int _txtHeight = entityData['opponents'][_type]["txtHeight"];
     int _cols = entityData['opponents'][_type]["cols"];
     int _rows = entityData['opponents'][_type]["rows"];
     double stepSize = 0.1;
+
     SpriteSheet spriteSheet = SpriteSheet(
         imageName: _animationPath,
         textureWidth: _txtWidth,
         textureHeight: _txtHeight,
         columns: _cols,
         rows: _rows);
-    Animation animationRunningDown =
-        spriteSheet.createAnimation(0, stepTime: stepSize);
-    Animation animationRunningLeft =
-        spriteSheet.createAnimation(1, stepTime: stepSize);
-    Animation animationRunningRight =
-        spriteSheet.createAnimation(2, stepTime: stepSize);
-    Animation animationRunningUp =
-        spriteSheet.createAnimation(3, stepTime: stepSize);
-    Animation animationStandingDown =
+    animationRunningDown = spriteSheet.createAnimation(0, stepTime: stepSize);
+    animationRunningLeft = spriteSheet.createAnimation(1, stepTime: stepSize);
+    animationRunningRight = spriteSheet.createAnimation(2, stepTime: stepSize);
+    animationRunningUp = spriteSheet.createAnimation(3, stepTime: stepSize);
+    animationStandingDown =
         spriteSheet.createAnimation(4, stepTime: stepSize * 1.5);
-    Animation animationStandingLeft =
+    animationStandingLeft =
         spriteSheet.createAnimation(5, stepTime: stepSize * 1.5);
-    Animation animationStandingUp =
+    animationStandingUp =
         spriteSheet.createAnimation(7, stepTime: stepSize * 1.5);
-    Animation animationStandingRight =
+    animationStandingRight =
         spriteSheet.createAnimation(6, stepTime: stepSize * 1.5);
-    _entityRnDown = AnimationComponent(0, 0, animationRunningDown);
-    _entityRnUp = AnimationComponent(0, 0, animationRunningUp);
-    _entityRnLeft = AnimationComponent(0, 0, animationRunningLeft);
-    _entityRnRight = AnimationComponent(0, 0, animationRunningRight);
-    _entityStdDown = AnimationComponent(0, 0, animationStandingDown);
-    _entityStdUp = AnimationComponent(0, 0, animationStandingUp);
-    _entityStdLeft = AnimationComponent(0, 0, animationStandingLeft);
-    _entityStdRight = AnimationComponent(0, 0, animationStandingRight);
 
-    _activeEntity = _entityStdDown;
+    // coins and score is fake yet
+    _coins = _score = 100;
+    _healthbar = CharHealthbar(_maxHealth, _health, _coins, _score);
+    _btnbar = InterfaceBtnBar([CharacterMode.Attack, CharacterMode.Walk]);
+    _activeEntity = AnimationComponent(0, 0, animationStandingDown);
   }
 
-  void render(Canvas canvas) {
-    _activeEntity.x = (screenSize.width - baseAnimationWidth()) / 2;
-    _activeEntity.y = (screenSize.height - baseAnimationHeight()) / 2;
+  //All the taps in the game are handled here by the character itself
+  void onTapDown(TapDownDetails details) {
+    List btnBarResults = _btnbar.onTapDown(details);
+    if (!btnBarResults[1]) {
+      mmoGame.addToSocket(
+          btnBarResults[0].toString(),
+          (details.globalPosition.dx - screenSize.width / 2) /
+              (screenSize.width / 2),
+          (details.globalPosition.dy - screenSize.height / 2) /
+              (screenSize.height / 2));
+    }
+  }
+
+  void renderChar(Canvas canvas) {
     canvas.save();
     _activeEntity.render(canvas);
     canvas.restore();
   }
 
+  void renderInterface(Canvas canvas) {
+    canvas.save();
+    _btnbar.render(canvas);
+    canvas.restore();
+    canvas.save();
+    _healthbar.render(canvas);
+    canvas.restore();
+  }
+
   void update(double t, double serverT) {
+    _btnbar.update(t);
+    _healthbar.update(_maxHealth, _health, _score, _coins);
     _activeEntity.animation.update(t);
   }
 
   void updateState(Map<String, dynamic> characterState) {
-    int timeNow = DateTime.now().millisecondsSinceEpoch;
-
+    _health = characterState["health"];
+    _maxHealth = characterState["health"];
     int nextDirection = characterState["dir"];
 
     switch (nextDirection) {
       case 0:
-        _activeEntity = _entityRnLeft;
+        _activeEntity.animation = animationRunningLeft;
         break;
       case 1:
-        _activeEntity = _entityRnUp;
+        _activeEntity.animation = animationRunningUp;
         break;
       case 2:
-        _activeEntity = _entityRnRight;
+        _activeEntity.animation = animationRunningRight;
         break;
       case 3:
-        _activeEntity = _entityRnDown;
+        _activeEntity.animation = animationRunningDown;
         break;
       case 4:
-        _activeEntity = _entityStdLeft;
+        _activeEntity.animation = animationStandingLeft;
         break;
       case 5:
-        _activeEntity = _entityStdUp;
+        _activeEntity.animation = animationStandingUp;
         break;
       case 6:
-        _activeEntity = _entityStdRight;
+        _activeEntity.animation = animationStandingRight;
         break;
       case 7:
-        _activeEntity = _entityStdDown;
+        _activeEntity.animation = animationStandingDown;
         break;
       default:
     }
   }
 
   void resize() {
-    _entityRnDown.width = baseAnimationWidth();
-    _entityRnDown.height = baseAnimationHeight();
+    _activeEntity.x = (screenSize.width - baseAnimationWidth()) / 2;
+    _activeEntity.y = (screenSize.height - baseAnimationHeight()) / 2;
+    _activeEntity.width = baseAnimationWidth();
+    _activeEntity.height = baseAnimationHeight();
 
-    _entityRnLeft.width = baseAnimationWidth();
-    _entityRnLeft.height = baseAnimationHeight();
-
-    _entityRnUp.width = baseAnimationWidth();
-    _entityRnUp.height = baseAnimationHeight();
-
-    _entityRnRight.width = baseAnimationWidth();
-    _entityRnRight.height = baseAnimationHeight();
-
-    _entityStdDown.width = baseAnimationWidth();
-    _entityStdDown.height = baseAnimationHeight();
-
-    _entityStdUp.width = baseAnimationWidth();
-    _entityStdUp.height = baseAnimationHeight();
-
-    _entityStdRight.width = baseAnimationWidth();
-    _entityStdRight.height = baseAnimationHeight();
-
-    _entityStdLeft.width = baseAnimationWidth();
-    _entityStdLeft.height = baseAnimationHeight();
-
-    _entityStdDown.width = baseAnimationWidth();
-    _entityStdDown.height = baseAnimationHeight();
+    _healthbar.resize();
+    _btnbar.resize();
   }
 
-  factory Character.fromJson(Map<String, dynamic> json) => Character(json["id"],
-      json["type"], json["x"].toDouble(), json["y"].toDouble(), json["dir"]);
+  factory Character.fromJson(Map<String, dynamic> json) => Character(
+      json["id"], json["type"], json["health"], json["maxHealth"], json["dir"]);
 
   Map<String, dynamic> toJson() => {
         "id": id,

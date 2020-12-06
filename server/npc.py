@@ -12,6 +12,7 @@ class NPC:
         self.maxHealth = 300
         self.speed = 5
         self.id = id
+        self.lifestate = 1
         #directions: 0 is left, 1 up, 2 right, 3 down (walking) and the next 4 are the same (standing)
         self.direction = 7
         self.pltype = pltype

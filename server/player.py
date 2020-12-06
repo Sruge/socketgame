@@ -16,6 +16,7 @@ class Player:
         #directions: 0 is left, 1 up, 2 right, 3 down (walking) and the next 4 are the same (standing)
         self.direction = 7
         self.pltype = pltype
+        self.lifestate = 1
         self.rect = pygame.Rect((x,y),(1000,1200))
         
     def update(self, time):
