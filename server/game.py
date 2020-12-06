@@ -33,7 +33,7 @@ class Game:
         self.npc_id += 1
 
     def add_bullet(self, playerId, dest_x, dest_y):
-        self.bullets[self.bullet_id] = Bullet(self.bullet_id, self.players[playerId].rect.x, self.players[playerId].rect.y, dest_x, dest_y, "standard")
+        self.bullets[self.bullet_id] = Bullet(self.bullet_id, playerId, self.players[playerId].rect.x, self.players[playerId].rect.y, dest_x, dest_y, "standard")
         self.bullet_id += 1
         
     def update(self):
@@ -43,15 +43,15 @@ class Game:
             self.add_npc()
 
         #remove dead players and update the others
-        self.players = dict([val for val in self.players.items() if val[0] != 0])
+        self.players = dict([val for val in self.players.items() if val[1].lifestate != 0])
         [val.update() for val in self.players.values()]
         
         #remove dead npcs and update the others
-        self.npcs = dict([val for val in self.npcs.items() if val[0] != 0])
+        self.npcs = dict([val for val in self.npcs.items() if val[1].lifestate != 0])
         [npc.update() for npc in self.npcs.values()]
 
         #remove dead bullets and update the others
-        self.bullets = dict([val for val in self.bullets.items() if val[0] != 0])
+        self.bullets = dict([val for val in self.bullets.items() if val[1].lifestate != 0])
         [val.update() for val in self.bullets.values()]
 
         self.check_bullets_collissions()
@@ -60,9 +60,21 @@ class Game:
         self.players[id].set_destination(x,y)
 
     def check_bullets_collissions(self):
-        for bullet in self.bullets.items():
-            print(bullet[1].rect.center)
-            hitPlayer = bullet[1].rect.collidelist([player[1].rect for player in self.players.items()])
+        hasHit = False
+        for bullet in self.bullets.values():
+            for player in self.players.values():
+                if player.rect.colliderect(bullet.rect) and bullet.playerId != player.id:
+                    player.health -= bullet.damage
+                    print("Player with id ", player.id, " got ", bullet.damage, " damage! Health remaining: ", player.health)
+                    hasHit = True
+                    break
+            if not hasHit:
+                for npc in self.npcs.values():
+                    if npc.rect.colliderect(bullet.rect):
+                        npc.health -= bullet.damage
+                        print("NPC with id ", npc.id, " got ", bullet.damage, " damage! Health remaining: ", npc.health)
+                        hasHit = True
+                        break
 
             
     def return_state(self):

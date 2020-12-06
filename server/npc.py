@@ -40,6 +40,9 @@ class NPC:
         if ((self.vel_y > 0 and self.rect.center[1] > self.destination_y) or (self.vel_y < 0 and self.rect.center[1] < self.destination_y)):
             self.vel_x = 0
             self.vel_y = 0
+
+        if self.health < 0:
+            self.lifestate = 0
             
             
     def set_destination(self, x ,y):
@@ -48,8 +51,6 @@ class NPC:
 
         self.vel_x = 250 * x / (abs(x) + abs(y))
         self.vel_y = 125 * y / (abs(x) + abs(y))
-        
-        print("New Player Destination: ", self.destination_x, ", ", self.destination_y)
-        
+                
     def toJson(self):
         return {"id":self.id,"x":self.rect.x, "y":self.rect.y, "type":self.pltype, "dir": self.direction, "health":self.health, "maxHealth":self.maxHealth}

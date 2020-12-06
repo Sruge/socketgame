@@ -72,6 +72,7 @@ def threaded_client(conn, _id):
 	name = data.decode("utf-8")
 	print("[LOG]", name, "connected to the server.")
 	game.add_player(current_id)
+	print("[LOG]", name, "got a new player with id", current_id)
 
 	id_string = (f"#{current_id}")
 
@@ -93,11 +94,7 @@ def threaded_client(conn, _id):
 			if (mode == "CharacterMode.Walk"):
 				game.set_destination(current_id, dest_x, dest_y)
 			elif (mode == "CharacterMode.Attack"):
-				game.add_bullet(current_id, dest_x, dest_y)
-			else:
-
-			
-			
+				game.add_bullet(current_id, dest_x, dest_y)			
 
 		except Exception as e:
 			print(e)
