@@ -104,6 +104,9 @@ class CharHealthbar {
   void updateRect(int maxH, int h) {
     maxHealth = maxH;
     health = h;
+    if (health < 0) {
+      health = 0;
+    }
     double greenSize = (health / maxHealth) * screenSize.width / 3;
     double redSize = ((maxHealth - health) / maxHealth) * screenSize.width / 3;
     _healthbarGreen = Rect.fromLTWH(screenSize.width / 3, 10, greenSize, 28);

@@ -39,22 +39,23 @@ game = Game()
 
 def main_thread():
 	global connections
+	game_time = time.time()
 	while True:
 		try:
-			game_time = time.time()
 			game.update()
-			data = json.dumps({"gamestate": game.return_state(), "gametime": game_time}) + ";" 
-			send_data = data
+			update_time = time.time() - game_time
+			game_time = time.time()
+			data = json.dumps({"gamestate": game.return_state(), "gametime": update_time}) + ";" 
 
 			# send data back to clients
 			for conn in connections:
-				conn.sendall(send_data.encode("utf-8"))
+				conn.sendall(data.encode("utf-8"))
 			
 		
 		except Exception as e:
 			print(e)
 
-		time.sleep(0.05)
+		time.sleep(0.03)
 
 
 # MAINLOOP
@@ -71,12 +72,11 @@ def threaded_client(conn, _id):
 	data = conn.recv(32)
 	name = data.decode("utf-8")
 	print("[LOG]", name, "connected to the server.")
-	game.add_player(current_id)
-	print("[LOG]", name, "got a new player with id", current_id)
+	player = game.add_player(current_id)
+	print("[LOG] New Player: ",  player)
 
-	id_string = (f"#{current_id}")
-
-	conn.send(id_string.encode("utf-8"))
+	data = "#" +  json.dumps({"player": player.toJson(), "gamestate":game.return_state()}) + ";" 
+	conn.sendall(data.encode("utf-8"))
 
 	while True:
 		try:
@@ -98,6 +98,7 @@ def threaded_client(conn, _id):
 
 		except Exception as e:
 			print(e)
+			print(data)
 			break  # if an exception has been reached disconnect client
 
 		time.sleep(0.01)

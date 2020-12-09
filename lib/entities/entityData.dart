@@ -1,19 +1,37 @@
 import 'package:socketgame/views/utils/SizeHolder.dart';
 
 Map entityData = {
-  "buildings": {
+  "things": {
     "bank": {
       "imgUrl": "bank.png",
-      "txtWidth": 32,
-      "txtHeight": 48,
-      "cols": 1,
-      "rows": 1,
-      "width": screenSize.width / 4,
-      "height": screenSize.height / 3
-    }
+    },
+    "house": {
+      "imgUrl": "house.png",
+    },
+    "fence": {
+      "imgUrl": "fence.png",
+    },
+    "tree": {
+      "imgUrl": "tree.png",
+    },
   },
   "bullets": {
     "standard": {
+      "imgUrl": "bullet.png",
+      "width": screenSize.width * 0.01,
+      "height": screenSize.width * 0.01
+    },
+    "fire": {
+      "imgUrl": "bullet.png",
+      "width": screenSize.width * 0.01,
+      "height": screenSize.width * 0.01
+    },
+    "freeze": {
+      "imgUrl": "bullet.png",
+      "width": screenSize.width * 0.01,
+      "height": screenSize.width * 0.01
+    },
+    "electric": {
       "imgUrl": "bullet.png",
       "width": screenSize.width * 0.01,
       "height": screenSize.width * 0.01
@@ -28,7 +46,25 @@ Map entityData = {
       "rows": 8,
       "width": baseAnimationWidth,
       "height": baseAnimationHeight
-    }
+    },
+    "elf2": {
+      "imgUrl": "elf2.png",
+      "txtWidth": 32,
+      "txtHeight": 48,
+      "cols": 4,
+      "rows": 8,
+      "width": baseAnimationWidth,
+      "height": baseAnimationHeight
+    },
+    "elf3": {
+      "imgUrl": "elf2.png",
+      "txtWidth": 32,
+      "txtHeight": 48,
+      "cols": 4,
+      "rows": 8,
+      "width": baseAnimationWidth,
+      "height": baseAnimationHeight
+    },
   },
   "npcs": {
     "priest": {
@@ -39,6 +75,24 @@ Map entityData = {
       "rows": 8,
       "width": baseAnimationWidth,
       "height": baseAnimationHeight
-    }
+    },
+    "monster": {
+      "imgUrl": "monster.png",
+      "txtWidth": 32,
+      "txtHeight": 48,
+      "cols": 4,
+      "rows": 8,
+      "width": baseAnimationWidth,
+      "height": baseAnimationHeight
+    },
+    "ryuk": {
+      "imgUrl": "ryuk.png",
+      "txtWidth": 32,
+      "txtHeight": 48,
+      "cols": 4,
+      "rows": 8,
+      "width": baseAnimationWidth,
+      "height": baseAnimationHeight
+    },
   }
 };

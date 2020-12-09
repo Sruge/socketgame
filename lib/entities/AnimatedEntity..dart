@@ -4,10 +4,12 @@ import 'dart:ui';
 import 'package:flame/animation.dart';
 import 'package:flame/components/animation_component.dart';
 import 'package:flame/spritesheet.dart';
-import 'package:socketgame/views/BaseView.dart';
+import 'package:socketgame/entities/healthbars/EnemyHealthbar.dart';
 import 'package:socketgame/views/utils/SizeHolder.dart';
 
-class AnimatedEntity {
+import 'Entity.dart';
+
+class AnimatedEntity extends Entity {
   Animation animationRunningDown;
   Animation animationRunningLeft;
   Animation animationRunningUp;
@@ -17,11 +19,13 @@ class AnimatedEntity {
   Animation animationStandingUp;
   Animation animationStandingRight;
 
-  AnimationComponent _activeEntity;
+  AnimationComponent animatedEntity;
 
   List<Map<String, dynamic>> _nextState;
   List<Map<String, dynamic>> _previousState;
   Map<String, dynamic> initialState;
+  EnemyHealthbar _healthbar;
+  int health, maxHealth;
   int _stateIndex = 0;
   Random _random;
 
@@ -55,36 +59,34 @@ class AnimatedEntity {
         stepTime: stepSize * _randomStandingStepSize);
     animationStandingRight = spriteSheet.createAnimation(6,
         stepTime: stepSize * _randomStandingStepSize);
-    _activeEntity = AnimationComponent(0, 0, animationStandingDown);
+    animatedEntity = AnimationComponent(0, 0, animationStandingDown);
   }
 
-  void render(Canvas canvas, bool upperHalf) {
-    if (upperHalf) {
-      if (_activeEntity.y + baseAnimationHeight() / 2 < screenSize.height / 2) {
-        canvas.save();
-        _activeEntity.render(canvas);
-        canvas.restore();
-      }
-    } else {
-      if (_activeEntity.y + baseAnimationHeight() / 2 > screenSize.height / 2) {
-        canvas.save();
-        _activeEntity.render(canvas);
-        canvas.restore();
-      }
-    }
+  void render(Canvas canvas) {
+    canvas.save();
+    animatedEntity.render(canvas);
+    canvas.restore();
+    canvas.save();
+    _healthbar.render(canvas);
+    canvas.restore();
   }
 
   void update(double t, double serverT) {
-    double timeFactor = t / 0.05; //_nextState[1 - _stateIndex]["duration"];
+    double timeFactor = t / _nextState[1 - _stateIndex]["duration"];
 
-    double dx = _nextState[1 - _stateIndex]["x"] - _activeEntity.x;
-    double dy = _nextState[1 - _stateIndex]["y"] - _activeEntity.y;
+    double dx = _previousState[1 - _stateIndex]["x"] - animatedEntity.x;
+    double dy = _previousState[1 - _stateIndex]["y"] - animatedEntity.y;
+    health = _previousState[1 - _stateIndex]["health"];
+    maxHealth = _previousState[1 - _stateIndex]["maxHealth"];
+    if (health < 0) {
+      health = 0;
+    }
 
     if (dx != 0) {
       _velX = dx *
           timeFactor /
           (dx.abs() + dy.abs()) *
-          250 *
+          180 *
           screenSize.width /
           20000;
     }
@@ -92,68 +94,72 @@ class AnimatedEntity {
       _velY = dy *
           timeFactor /
           (dx.abs() + dy.abs()) *
-          125 *
+          90 *
           screenSize.height /
           10000;
     }
-    if (dx > 0 && _activeEntity.x + _velX > _nextState[1 - _stateIndex]["x"] ||
-        dx < 0 && _activeEntity.x + _velX < _nextState[1 - _stateIndex]["x"]) {
+    if ((dx > 0 &&
+                animatedEntity.x + _velX > _nextState[1 - _stateIndex]["x"] ||
+            dx < 0 &&
+                animatedEntity.x + _velX < _nextState[1 - _stateIndex]["x"]) ||
+        (dy > 0 &&
+                animatedEntity.y + _velY > _nextState[1 - _stateIndex]["y"] ||
+            dy < 0 &&
+                animatedEntity.y + _velY < _nextState[1 - _stateIndex]["y"])) {
       _velX = 0;
-    }
-    if (dy > 0 && _activeEntity.y + _velY > _nextState[1 - _stateIndex]["y"] ||
-        dy < 0 && _activeEntity.y + _velY < _nextState[1 - _stateIndex]["y"]) {
       _velY = 0;
     }
 
-    _activeEntity.x = _activeEntity.x + _velX;
-    _activeEntity.y = _activeEntity.y + _velY;
+    animatedEntity.x = animatedEntity.x + _velX;
+    animatedEntity.y = animatedEntity.y + _velY;
 
-    _activeEntity.animation.update(t);
+    animatedEntity.animation.update(t);
+    _healthbar.updateRect(
+        maxHealth, health, animatedEntity.x, animatedEntity.y);
   }
 
-  void updateState(
-      Map<String, dynamic> characterState, Map<String, dynamic> playerState) {
-    int timeNow = DateTime.now().millisecondsSinceEpoch;
-
+  void updateState(Map<String, dynamic> characterState,
+      Map<String, dynamic> playerState, double gametime) {
     _previousState[_stateIndex] = _nextState[_stateIndex];
-    int nextDuration = timeNow - _nextState[_stateIndex]["duration"];
     double nextX = (screenSize.width / 20000) * playerState["x"] -
         (screenSize.width / 20000) * characterState["x"] +
-        (screenSize.width - baseAnimationWidth()) / 2;
+        charOffsetX;
     double nextY = (screenSize.height / 10000) * playerState["y"] -
         (screenSize.height / 10000) * characterState["y"] +
-        (screenSize.height - baseAnimationHeight()) / 2;
+        charOffsetY;
     int nextDirection = playerState["dir"];
 
     _nextState[_stateIndex]["x"] = nextX;
     _nextState[_stateIndex]["y"] = nextY;
     _nextState[_stateIndex]["dir"] = nextDirection;
-    _nextState[_stateIndex]["duration"] = nextDuration;
+    _nextState[_stateIndex]["duration"] = gametime;
+    _nextState[_stateIndex]["health"] = playerState["health"];
+    _nextState[_stateIndex]["maxHealth"] = playerState["maxHealth"];
 
     switch (nextDirection) {
       case 0:
-        _activeEntity.animation = animationRunningLeft;
+        animatedEntity.animation = animationRunningLeft;
         break;
       case 1:
-        _activeEntity.animation = animationRunningUp;
+        animatedEntity.animation = animationRunningUp;
         break;
       case 2:
-        _activeEntity.animation = animationRunningRight;
+        animatedEntity.animation = animationRunningRight;
         break;
       case 3:
-        _activeEntity.animation = animationRunningDown;
+        animatedEntity.animation = animationRunningDown;
         break;
       case 4:
-        _activeEntity.animation = animationStandingLeft;
+        animatedEntity.animation = animationStandingLeft;
         break;
       case 5:
-        _activeEntity.animation = animationStandingUp;
+        animatedEntity.animation = animationStandingUp;
         break;
       case 6:
-        _activeEntity.animation = animationStandingRight;
+        animatedEntity.animation = animationStandingRight;
         break;
       case 7:
-        _activeEntity.animation = animationStandingDown;
+        animatedEntity.animation = animationStandingDown;
         break;
       default:
     }
@@ -164,10 +170,16 @@ class AnimatedEntity {
   void resize() {
     _previousState = [initialState, initialState];
     _nextState = [initialState, initialState];
-    _activeEntity.width = baseAnimationWidth();
-    _activeEntity.height = baseAnimationHeight();
+    animatedEntity.width = baseAnimationWidth;
+    animatedEntity.height = baseAnimationHeight;
 
-    _activeEntity.x = _nextState[_stateIndex]["x"];
-    _activeEntity.y = _nextState[_stateIndex]["y"];
+    animatedEntity.x = _nextState[_stateIndex]["x"];
+    animatedEntity.y = _nextState[_stateIndex]["y"];
+
+    health = _nextState[_stateIndex]["health"];
+    maxHealth = _nextState[_stateIndex]["maxHealth"];
+
+    _healthbar = EnemyHealthbar(health, maxHealth);
+    _healthbar.resize(animatedEntity.x, animatedEntity.y);
   }
 }

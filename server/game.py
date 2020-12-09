@@ -8,6 +8,7 @@ import json
 from player import Player
 from npc import NPC
 from bullet import Bullet
+from world import World
 
 class Game:
     def __init__(self):
@@ -22,9 +23,11 @@ class Game:
         self.maxX = 60000
         self.minY = 0
         self.maxY = 2000
+        self.world = World("japaneseVillage")
         
     def add_player(self, id):
-        self.players[id] = Player(id, 10.0, 10.0, 300, 300, "elf")
+        self.players[id] = Player(id, 0.0, 0.0, 300, 300, "elf")
+        return self.players[id]
         
     def add_npc(self):
         x = random.randint(self.minX, self.maxX)
@@ -37,22 +40,22 @@ class Game:
         self.bullet_id += 1
         
     def update(self):
-        rand = random.randint(0, 200)
-        #every frame there is a chance of 1/150 for adding a new npc
+        rand = random.randint(0, 300)
+        #every frame there is a chance of 1/300 for adding a new npc
         if(rand == 150 and len(self.npcs) < 10):
             self.add_npc()
 
         #remove dead players and update the others
         self.players = dict([val for val in self.players.items() if val[1].lifestate != 0])
-        [val.update() for val in self.players.values()]
+        [val.update(self.world) for val in self.players.values()]
         
         #remove dead npcs and update the others
         self.npcs = dict([val for val in self.npcs.items() if val[1].lifestate != 0])
-        [npc.update() for npc in self.npcs.values()]
+        [npc.update(self.world) for npc in self.npcs.values()]
 
         #remove dead bullets and update the others
         self.bullets = dict([val for val in self.bullets.items() if val[1].lifestate != 0])
-        [val.update() for val in self.bullets.values()]
+        [val.update(self.world) for val in self.bullets.values()]
 
         self.check_bullets_collissions()
 
@@ -65,14 +68,14 @@ class Game:
             for player in self.players.values():
                 if player.rect.colliderect(bullet.rect) and bullet.playerId != player.id:
                     player.health -= bullet.damage
-                    print("Player with id ", player.id, " got ", bullet.damage, " damage! Health remaining: ", player.health)
+                    bullet.lifestate = 0
                     hasHit = True
                     break
             if not hasHit:
                 for npc in self.npcs.values():
                     if npc.rect.colliderect(bullet.rect):
                         npc.health -= bullet.damage
-                        print("NPC with id ", npc.id, " got ", bullet.damage, " damage! Health remaining: ", npc.health)
+                        bullet.lifestate = 0
                         hasHit = True
                         break
 
@@ -81,11 +84,12 @@ class Game:
         players = {}
         npcs = {}
         bullets = {}
+        world = self.world.toJson()
         for key in self.players:
             players[key] = self.players[key].toJson()
         for key in self.npcs:
             npcs[key] = self.npcs[key].toJson()
         for key in self.bullets:
             bullets[key] = self.bullets[key].toJson()
-        state = {"players" : players, "npcs": npcs, "bullets": bullets}
+        state = {"players" : players, "npcs": npcs, "bullets": bullets, "world": world }
         return state

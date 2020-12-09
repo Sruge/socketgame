@@ -16,10 +16,10 @@ class NPC:
         #directions: 0 is left, 1 up, 2 right, 3 down (walking) and the next 4 are the same (standing)
         self.direction = 7
         self.pltype = pltype
-        self.rect = pygame.Rect((x,y),(32,48))
+        self.rect = pygame.Rect((x,y),(1000,1200))
         
        
-    def update(self):
+    def update(self, world):
         if (abs(self.vel_y * 0.7) > abs(self.vel_x)):
             if (self.vel_y > 0):
                 self.direction = 3
@@ -49,8 +49,8 @@ class NPC:
         self.destination_x = self.rect.center[0] + x * 10000
         self.destination_y = self.rect.center[1] + y * 5000
 
-        self.vel_x = 250 * x / (abs(x) + abs(y))
-        self.vel_y = 125 * y / (abs(x) + abs(y))
+        self.vel_x = 180 * x / (abs(x) + abs(y))
+        self.vel_y = 90 * y / (abs(x) + abs(y))
                 
     def toJson(self):
         return {"id":self.id,"x":self.rect.x, "y":self.rect.y, "type":self.pltype, "dir": self.direction, "health":self.health, "maxHealth":self.maxHealth}

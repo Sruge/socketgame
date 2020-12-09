@@ -8,6 +8,7 @@ import 'package:socketgame/entities/NPC.dart';
 import 'package:socketgame/views/utils/SizeHolder.dart';
 
 import 'entities/Bullet.dart';
+import 'entities/Entity.dart';
 import 'entities/Player.dart';
 
 class Playground {
@@ -34,7 +35,7 @@ class Playground {
   }
 
   void update(double t) {
-    if (_char != null) {
+    if (_bg != null) {
       _char.update(t, serverT);
       _bg.update(t, serverT);
 
@@ -51,38 +52,43 @@ class Playground {
   }
 
   void render(Canvas canvas) {
-    if (_char != null) {
+    List<Entity> entities = [...players, ...npcs, ...bullets];
+    if (_bg != null) {
       _bg.render(canvas);
+      entities.addAll(_bg.things);
+    }
+    if (_char != null) entities.add(_char);
 
-      bullets.forEach((element) {
-        element.render(canvas, true);
-      });
+    entities.sort((a, b) => compareEntities(a, b));
 
-      //render the entities in the upper half first so they are behind the char
-      players.forEach((element) {
-        element.render(canvas, true);
+    //TODO: there always needs to be a character, we have to create one with the playground!
+    if (_char != null) {
+      entities.forEach((element) {
+        element.render(canvas);
       });
-      npcs.forEach((element) {
-        element.render(canvas, true);
-      });
-
-      //render the char in the middle
-      _char.renderChar(canvas);
-      //render the entities in the lower half after the char so they are in front
-      players.forEach((element) {
-        element.render(canvas, false);
-      });
-      npcs.forEach((element) {
-        element.render(canvas, false);
-      });
-
-      //On top of all the players and enemys we render the bullets
-      bullets.forEach((element) {
-        element.render(canvas, true);
-      });
-      //At the very end render the interface
       _char.renderInterface(canvas);
     }
+  }
+
+  int compareEntities(Entity a, Entity b) {
+    double compA, compB;
+
+    if (a.activeEntity != null) {
+      compA = a.activeEntity.y + a.activeEntity.height;
+    } else if (a.animatedEntity != null) {
+      compA = a.animatedEntity.y + a.animatedEntity.height;
+    } else {
+      compA = 0;
+    }
+    if (b.activeEntity != null) {
+      compB = b.activeEntity.y + b.activeEntity.height;
+    } else if (b.animatedEntity != null) {
+      compB = b.animatedEntity.y + b.animatedEntity.height;
+    } else {
+      compB = 0;
+    }
+
+    return compA.compareTo(compB);
   }
 
   void resize() {
@@ -99,43 +105,39 @@ class Playground {
     }
   }
 
-  void updateState(String state, int id) {
+  void updateState(String state) {
     Map<String, dynamic> nextState = jsonDecode(state);
-    this.serverT = nextState["gametime"].toDouble() - this.gametime;
     this.gametime = nextState["gametime"].toDouble();
 
     //Get all the players in the list from the server
     var nextPlayers = nextState["gamestate"]["players"];
 
     //Only do something if the player itself is in the player list
-    if (nextPlayers != null && nextPlayers[id.toString()] != null) {
-      Map<String, dynamic> nextCharState = nextPlayers[id.toString()];
+    if (nextPlayers != null && nextPlayers[_char.id.toString()] != null) {
+      Map<String, dynamic> nextCharState = nextPlayers[_char.id.toString()];
 
       //If there is no playing char yet we create one
-      if (this._char == null) {
-        this._char = Character.fromJson(nextCharState);
-        this._char.resize();
-        this._bg = Background('bg2.png', nextCharState["x"].toDouble(),
-            nextCharState["y"].toDouble());
-        this._bg.resize();
-      } else {
-        this._char.updateState(nextCharState);
-        this._bg.updateState(nextCharState);
-      }
+      // if (this._char == null) {
+      //   //this._char = Character.fromJson(nextCharState);
+      //   //this._char.resize();
+      //   this._bg = Background(nextWorld, nextCharState);
+      //   this._bg.resize();
+      // } else {
+      this._char.updateState(nextCharState);
+      this._bg.updateState(nextCharState, this.gametime);
+
       List<Player> updatedPlayers = [];
       for (var nextPlState in nextPlayers.values) {
         bool isNewPlayer = true;
         this.players.forEach((previousPlayer) {
-          if (nextPlState["id"] != id &&
+          if (nextPlState["id"] != _char.id &&
               previousPlayer.id == nextPlState["id"]) {
-            previousPlayer.updateState(nextCharState, nextPlState);
+            previousPlayer.updateState(nextCharState, nextPlState, gametime);
             updatedPlayers.add(previousPlayer);
             isNewPlayer = false;
           }
         });
-        if (nextPlState["id"] != id && isNewPlayer) {
-          print(
-              "New Player since last state update: " + nextPlState.toString());
+        if (nextPlState["id"] != _char.id && isNewPlayer) {
           updatedPlayers.add(addPlayer(nextPlState, nextCharState));
         }
       }
@@ -148,14 +150,12 @@ class Playground {
           bool isNewNpc = true;
           this.npcs.forEach((previousNpc) {
             if (previousNpc.id == nextNpcState["id"]) {
-              previousNpc.updateState(nextCharState, nextNpcState);
+              previousNpc.updateState(nextCharState, nextNpcState, gametime);
               updatedNpcs.add(previousNpc);
               isNewNpc = false;
             }
           });
           if (isNewNpc) {
-            print(
-                "New NPC since last state update: " + nextNpcState.toString());
             updatedNpcs.add(addNPC(nextNpcState, nextCharState));
           }
         }
@@ -169,14 +169,13 @@ class Playground {
           bool isNewBullet = true;
           this.bullets.forEach((previousBullet) {
             if (previousBullet.id == nextBulletState["id"]) {
-              previousBullet.updateState(nextCharState, nextBulletState);
+              previousBullet.updateState(
+                  nextCharState, nextBulletState, gametime);
               updatedBullets.add(previousBullet);
               isNewBullet = false;
             }
           });
           if (isNewBullet) {
-            print("New Bullet since last state update: " +
-                nextBulletState.toString());
             updatedBullets.add(addBullet(nextBulletState, nextCharState));
           }
         }
@@ -189,12 +188,14 @@ class Playground {
     Player playerToAdd = Player.fromJson(nextPlState);
     playerToAdd.initialState = {
       "x": (nextPlState["x"] * screenSize.width / 20000) +
-          (screenSize.width - baseAnimationWidth()) / 2 -
+          charOffsetX -
           (nextCharState["x"] * screenSize.width / 20000),
       "y": (nextPlState["y"] * screenSize.height / 10000) +
-          (screenSize.height - baseAnimationHeight()) / 2 -
+          charOffsetY -
           (nextCharState["y"] * screenSize.height / 10000),
       "dir": nextPlState["dir"],
+      "health": nextPlState["health"],
+      "maxHealth": nextPlState["maxHealth"],
       "duration": DateTime.now().millisecondsSinceEpoch
     };
     playerToAdd.resize();
@@ -205,12 +206,14 @@ class Playground {
     NPC npcToAdd = NPC.fromJson(nextNpcState);
     npcToAdd.initialState = {
       "x": (nextNpcState["x"] * screenSize.width / 20000) +
-          (screenSize.width - baseAnimationWidth()) / 2 -
+          charOffsetX -
           (nextCharState["x"] * screenSize.width / 20000),
       "y": (nextNpcState["y"] * screenSize.height / 10000) +
-          (screenSize.height - baseAnimationHeight()) / 2 -
+          charOffsetY -
           (nextCharState["y"] * screenSize.height / 10000),
       "dir": nextNpcState["dir"],
+      "health": nextNpcState["health"],
+      "maxHealth": nextNpcState["maxHealth"],
       "duration": DateTime.now().millisecondsSinceEpoch
     };
     npcToAdd.resize();
@@ -221,14 +224,26 @@ class Playground {
     Bullet bulletToAdd = Bullet.fromJson(nextBulletState);
     bulletToAdd.initialState = {
       "x": (nextBulletState["x"] * screenSize.width / 20000) +
-          (screenSize.width - screenSize.width * 0.01) / 2 -
+          charOffsetX -
           (nextCharState["x"] * screenSize.width / 20000),
       "y": (nextBulletState["y"] * screenSize.height / 10000) +
-          (screenSize.height - screenSize.height * 0.02) / 2 -
+          charOffsetY -
           (nextCharState["y"] * screenSize.height / 10000),
       "duration": DateTime.now().millisecondsSinceEpoch
     };
     bulletToAdd.resize();
     return bulletToAdd;
+  }
+
+  void init(String updateString) {
+    var data = jsonDecode(updateString);
+    this._char = Character.fromJson(data["player"]);
+    this._bg = Background(data["gamestate"]["world"], data["player"]);
+    this._char.resize();
+    this._bg.resize();
+  }
+
+  bool isInitialized() {
+    return (_char != null && _bg != null);
   }
 }

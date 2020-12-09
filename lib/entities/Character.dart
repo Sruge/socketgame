@@ -9,9 +9,10 @@ import 'package:socketgame/entities/healthbars/CharHealthbar.dart';
 import 'package:socketgame/entities/interface/CharacterMode.dart';
 import 'package:socketgame/entities/interface/InterfaceBtnBar.dart';
 import 'package:socketgame/views/utils/SizeHolder.dart';
+import 'Entity.dart';
 import 'entityData.dart';
 
-class Character {
+class Character extends Entity {
   String _type;
   int id;
   int _maxHealth;
@@ -26,7 +27,7 @@ class Character {
   Animation animationStandingLeft;
   Animation animationStandingUp;
   Animation animationStandingRight;
-  AnimationComponent _activeEntity;
+  AnimationComponent animatedEntity;
   CharHealthbar _healthbar;
   InterfaceBtnBar _btnbar;
 
@@ -58,11 +59,11 @@ class Character {
     animationStandingRight =
         spriteSheet.createAnimation(6, stepTime: stepSize * 1.5);
 
-    // coins and score is fake yet
+    // coins and score is fake
     _coins = _score = 100;
     _healthbar = CharHealthbar(_maxHealth, _health, _coins, _score);
     _btnbar = InterfaceBtnBar([CharacterMode.Attack, CharacterMode.Walk]);
-    _activeEntity = AnimationComponent(0, 0, animationStandingDown);
+    animatedEntity = AnimationComponent(0, 0, animationStandingDown);
   }
 
   //All the taps in the game are handled here by the character itself
@@ -78,9 +79,9 @@ class Character {
     }
   }
 
-  void renderChar(Canvas canvas) {
+  void render(Canvas canvas) {
     canvas.save();
-    _activeEntity.render(canvas);
+    animatedEntity.render(canvas);
     canvas.restore();
   }
 
@@ -96,48 +97,48 @@ class Character {
   void update(double t, double serverT) {
     _btnbar.update(t);
     _healthbar.update(_maxHealth, _health, _score, _coins);
-    _activeEntity.animation.update(t);
+    animatedEntity.animation.update(t);
   }
 
   void updateState(Map<String, dynamic> characterState) {
     _health = characterState["health"];
-    _maxHealth = characterState["health"];
+    _maxHealth = characterState["maxHealth"];
     int nextDirection = characterState["dir"];
 
     switch (nextDirection) {
       case 0:
-        _activeEntity.animation = animationRunningLeft;
+        animatedEntity.animation = animationRunningLeft;
         break;
       case 1:
-        _activeEntity.animation = animationRunningUp;
+        animatedEntity.animation = animationRunningUp;
         break;
       case 2:
-        _activeEntity.animation = animationRunningRight;
+        animatedEntity.animation = animationRunningRight;
         break;
       case 3:
-        _activeEntity.animation = animationRunningDown;
+        animatedEntity.animation = animationRunningDown;
         break;
       case 4:
-        _activeEntity.animation = animationStandingLeft;
+        animatedEntity.animation = animationStandingLeft;
         break;
       case 5:
-        _activeEntity.animation = animationStandingUp;
+        animatedEntity.animation = animationStandingUp;
         break;
       case 6:
-        _activeEntity.animation = animationStandingRight;
+        animatedEntity.animation = animationStandingRight;
         break;
       case 7:
-        _activeEntity.animation = animationStandingDown;
+        animatedEntity.animation = animationStandingDown;
         break;
       default:
     }
   }
 
   void resize() {
-    _activeEntity.x = (screenSize.width - baseAnimationWidth()) / 2;
-    _activeEntity.y = (screenSize.height - baseAnimationHeight()) / 2;
-    _activeEntity.width = baseAnimationWidth();
-    _activeEntity.height = baseAnimationHeight();
+    animatedEntity.x = charOffsetX;
+    animatedEntity.y = charOffsetY;
+    animatedEntity.width = baseAnimationWidth;
+    animatedEntity.height = baseAnimationHeight;
 
     _healthbar.resize();
     _btnbar.resize();

@@ -10,17 +10,17 @@ class Bullet:
         self.playerId = playerId
         self.destination_x = dest_x
         self.destination_y = dest_y
-        self.vel_x = 500 * dest_x / (abs(dest_x) + abs(dest_y))
-        self.vel_y = 250 * dest_y / (abs(dest_x) + abs(dest_y))
+        self.vel_x = 400 * dest_x / (abs(dest_x) + abs(dest_y))
+        self.vel_y = 200 * dest_y / (abs(dest_x) + abs(dest_y))
         self.id = id
         self.bullettype = bullettype
-        self.rect = pygame.Rect((x,y),(200,200))
+        self.rect = pygame.Rect((x + 400,y + 500),(200,200))
         self.lifetime = 40
         self.timer = 0
         self.damage = 30
 
 
-    def update(self):
+    def update(self, world):
         self.timer += 1
         if (self.timer > self.lifetime):
             self.lifestate = 0

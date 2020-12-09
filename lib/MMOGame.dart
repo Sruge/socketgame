@@ -8,6 +8,7 @@ import 'package:flame/util.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:socketgame/Playground.dart';
+import 'package:socketgame/entities/Character.dart';
 import 'package:socketgame/views/utils/SizeHolder.dart';
 
 MMOGame mmoGame = MMOGame();
@@ -19,6 +20,7 @@ class MMOGame extends Game with TapDetector {
   Playground playground;
   Socket socket;
   StringBuffer _buffer;
+  StreamSubscription _sub;
 
   MMOGame() {
     _fn = _init;
@@ -41,14 +43,29 @@ class MMOGame extends Game with TapDetector {
 
     socket = await Socket.connect('217.182.216.146', 5555);
     print('connected');
-
+    socket.add(utf8.encode("Gerus"));
     // listen to the received data event stream
-    socket.listen((List<int> event) {
-      onSocketEvent(utf8.decode(event));
+    _sub = socket.listen((List<int> event) {});
+
+    _sub.onData((data) {
+      onSocketEvent(utf8.decode(data));
     });
 
+    _sub.onDone(() async {
+      while (true) {
+        socket = await Socket.connect('217.182.216.146', 5555);
+        await Future.delayed(Duration(seconds: 3));
+        _sub = socket.listen((List<int> event) {});
+      }
+    });
+
+    void handleError(error) {
+      print(error);
+    }
+
+    _sub.onError(handleError);
+
     // send hello
-    socket.add(utf8.encode('gerus'));
 
     // wait 5 seconds
     //await Future.delayed(Duration(seconds: 1));
@@ -82,18 +99,41 @@ class MMOGame extends Game with TapDetector {
     playground.resize();
   }
 
+  void lifecycleStateChange(AppLifecycleState state) {
+    if (AppLifecycleState.detached == state) {
+      _sub.cancel();
+    } else if (AppLifecycleState.paused == state) {
+      _sub.cancel();
+    } else if (AppLifecycleState.resumed == state) {
+      _sub.resume();
+    } else if (AppLifecycleState.inactive == state) {
+      _sub.cancel();
+    }
+  }
+
   void onSocketEvent(String event) {
+    bool parsingPlayer = false;
     for (int i = 0; i < event.length; i++) {
       if (event[i] == "#") {
-        _playerId = int.parse(
-            event[i + 1] + event[i + 2] + event[i + 3] + event[i + 4]);
-        i += 4;
-      } else if (event[i] == ";") {
-        String updateString = _buffer.toString();
         _buffer.clear();
-        playground.updateState(updateString, _playerId);
+        parsingPlayer = true;
       } else {
-        _buffer.write(event[i]);
+        if (event[i] == ";") {
+          if (parsingPlayer) {
+            String updateString = _buffer.toString();
+            _buffer.clear();
+            playground.init(updateString);
+            parsingPlayer = false;
+          } else {
+            String updateString = _buffer.toString();
+            _buffer.clear();
+            if (playground.isInitialized()) {
+              playground.updateState(updateString);
+            }
+          }
+        } else {
+          _buffer.write(event[i]);
+        }
       }
     }
   }
