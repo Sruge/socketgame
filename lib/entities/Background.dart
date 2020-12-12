@@ -5,6 +5,7 @@ import 'package:flame/sprite.dart';
 import 'package:socketgame/entities/Thing.dart';
 import 'package:socketgame/views/utils/SizeHolder.dart';
 
+import 'Door.dart';
 import 'Entity.dart';
 
 class Background extends Entity {
@@ -12,9 +13,12 @@ class Background extends Entity {
   PositionComponent activeEntity;
   List<List<double>> _nextState;
   List<List<double>> _previousState;
+
   List<Thing> things;
+  List<Door> doors;
   int _stateIndex = 0;
   int _updateTime;
+  double _move = 0;
 
   Background(_nextWorld, _nextCharState) {
     double initialX = _nextWorld["x"] -
@@ -30,6 +34,7 @@ class Background extends Entity {
     activeEntity =
         SpriteComponent.fromSprite(0, 0, Sprite("${_nextWorld["bg"]}.png"));
     things = [];
+    doors = [];
     for (var thingJson in _nextWorld["things"]) {
       Thing thingToAdd = Thing.fromJson(thingJson);
       thingToAdd.initialState = {
@@ -41,6 +46,18 @@ class Background extends Entity {
       };
       thingToAdd.resize();
       things.add(thingToAdd);
+    }
+    for (var doorJson in _nextWorld["doors"]) {
+      Door doorToAdd = Door.fromJson(doorJson);
+      doorToAdd.initialState = {
+        "x": (doorJson["x"] - _nextCharState["x"]) * scaledScreenSizeWidth +
+            charOffsetX,
+        "y": (doorJson["y"] - _nextCharState["y"]) * scaledScreenSizeHeight +
+            charOffsetY,
+        "duration": DateTime.now().millisecondsSinceEpoch
+      };
+      doorToAdd.resize();
+      doors.add(doorToAdd);
     }
   }
 
@@ -62,20 +79,15 @@ class Background extends Entity {
     double velX = 0;
     double velY = 0;
     if (dx != 0) {
-      velX = dx *
-          timeFactor /
-          (dx.abs() + dy.abs()) *
-          180 *
-          screenSize.width /
-          20000;
+      velX =
+          dx * timeFactor / (dx.abs() + dy.abs()) * scaledScreenSizeWidth * 150;
     }
     if (dy != 0) {
       velY = dy *
           timeFactor /
           (dx.abs() + dy.abs()) *
-          90 *
-          screenSize.height /
-          10000;
+          scaledScreenSizeHeight *
+          150;
     }
 
     //If moving the object according to its velocity would
@@ -90,6 +102,7 @@ class Background extends Entity {
       velX = 0;
       velY = 0;
     }
+
     activeEntity.x = activeEntity.x + velX;
     activeEntity.y = activeEntity.y + velY;
 

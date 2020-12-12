@@ -18,8 +18,13 @@ class Player:
         self.direction = 7
         self.pltype = pltype
         self.rect = pygame.Rect((x,y),(1000,1200))
+        self.worldchange = ""
         
     def update(self, world):
+        x = (self.destination_x - self.rect.center[0]) 
+        y = (self.destination_y - self.rect.center[1]) 
+        self.vel_x = 150 * x / (abs(x) + abs(y))
+        self.vel_y = 150 * y / (abs(x) + abs(y))
         self.check_border_boundary_reached(world)
         self.check_object_intersect(world)
         self.check_destination_reached()
@@ -40,29 +45,28 @@ class Player:
 
         self.rect.move_ip(self.vel_x, self.vel_y)
 
+
         if self.health < 0:
             self.rect.x = 0
             self.rect.y = 0
-            self.healt = self.maxHealth
+            self.health = self.maxHealth
             
             
     def set_destination(self, x ,y):
-        self.destination_x = self.rect.center[0] + x * 10000
-        self.destination_y = self.rect.center[1] + y * 5000
+        self.destination_x = self.rect.center[0] + x
+        self.destination_y = self.rect.center[1] + y
 
-        self.vel_x = 180 * x / (abs(x) + abs(y))
-        self.vel_y = 90 * y / (abs(x) + abs(y))
-
+                
 
     def check_destination_reached(self):
-        if ((self.vel_x > 0 and self.rect.center[0] > self.destination_x) or
-            (self.vel_x < 0 and self.rect.center[0] < self.destination_x) or
-            (self.vel_y > 0 and self.rect.center[1] > self.destination_y) or 
-            (self.vel_y < 0 and self.rect.center[1] < self.destination_y)):
-                self.rect.x = self.destination_x - 500
-                self.rect.y = self.destination_y - 600
+        if ((self.vel_x > 0 and self.rect.center[0] + self.vel_x > self.destination_x) or
+            (self.vel_x < 0 and self.rect.center[0] + self.vel_x < self.destination_x)):
                 self.vel_x = 0
+
+        if ((self.vel_y > 0 and self.rect.center[1] + self.vel_y > self.destination_y) or 
+            (self.vel_y < 0 and self.rect.center[1] + self.vel_y < self.destination_y)):
                 self.vel_y = 0 
+
 
     def check_border_boundary_reached(self, world):
         if (self.rect.x + self.vel_x < 0):
@@ -89,15 +93,24 @@ class Player:
                 elif (self.vel_x < 0):
                     self.rect.x = thing.bottomRect.x + thing.bottomRect.width
                     self.vel_x = 0
+                self.vel_y = self.sign(self.vel_y) * 150
 
                     
             if (thing.bottomRect.colliderect(player_feet_with_new_y)):
                 if (self.vel_y > 0):
                     self.rect.y = thing.bottomRect.y - self.rect.height
                     self.vel_y = 0
+
                 elif (self.vel_y < 0):
-                    self.rect.y = thing.bottomRect.y + thing.bottomRect.height
+                    self.rect.y = thing.bottomRect.y + thing.bottomRect.height + 400 - self.rect.height
                     self.vel_y = 0
+                self.vel_x = self.sign(self.vel_x) * 150
+
+    def sign(self, number): 
+        """Will return 1 for positive, 
+        -1 for negative, and 0 for 0""" 
+        try:return number/abs(number) 
+        except ZeroDivisionError:return 0 
             
                 
     def toJson(self):

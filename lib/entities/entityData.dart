@@ -15,6 +15,17 @@ Map entityData = {
       "imgUrl": "tree.png",
     },
   },
+  "doors": {
+    "door1": {
+      "imgUrl": "door1.jpg",
+    },
+    "door2": {
+      "imgUrl": "door2.jpg",
+    },
+    "door3": {
+      "imgUrl": "door3.jpg",
+    },
+  },
   "bullets": {
     "standard": {
       "imgUrl": "bullet.png",

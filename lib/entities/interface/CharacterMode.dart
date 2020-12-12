@@ -1,1 +1,1 @@
-enum CharacterMode { Attack, Walk }
+enum CharacterMode { Attack, Walk, WorldChange }

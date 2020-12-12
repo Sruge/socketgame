@@ -8,6 +8,7 @@ import 'package:socketgame/entities/NPC.dart';
 import 'package:socketgame/views/utils/SizeHolder.dart';
 
 import 'entities/Bullet.dart';
+import 'entities/Door.dart';
 import 'entities/Entity.dart';
 import 'entities/Player.dart';
 
@@ -18,6 +19,7 @@ class Playground {
   List<Player> players;
   List<NPC> npcs;
   List<Bullet> bullets;
+  List<Door> doors;
   Character _char;
 
   Playground({
@@ -26,11 +28,15 @@ class Playground {
   }) {
     npcs = [];
     bullets = [];
+    doors = [];
   }
 
   void onTapDown(TapDownDetails details) {
-    if (_char != null) {
-      _char.onTapDown(details);
+    if (_bg != null) {
+      //_char.onTapDown(details);
+      _bg.doors.forEach((element) {
+        element.onTapDown(details);
+      });
     }
   }
 
@@ -56,12 +62,12 @@ class Playground {
     if (_bg != null) {
       _bg.render(canvas);
       entities.addAll(_bg.things);
+      entities.addAll(_bg.doors);
     }
-    if (_char != null) entities.add(_char);
+    entities.add(_char);
 
     entities.sort((a, b) => compareEntities(a, b));
 
-    //TODO: there always needs to be a character, we have to create one with the playground!
     if (_char != null) {
       entities.forEach((element) {
         element.render(canvas);
@@ -110,19 +116,12 @@ class Playground {
     this.gametime = nextState["gametime"].toDouble();
 
     //Get all the players in the list from the server
-    var nextPlayers = nextState["gamestate"]["players"];
+    var nextPlayers = nextState["worldstate"]["players"];
 
     //Only do something if the player itself is in the player list
     if (nextPlayers != null && nextPlayers[_char.id.toString()] != null) {
       Map<String, dynamic> nextCharState = nextPlayers[_char.id.toString()];
 
-      //If there is no playing char yet we create one
-      // if (this._char == null) {
-      //   //this._char = Character.fromJson(nextCharState);
-      //   //this._char.resize();
-      //   this._bg = Background(nextWorld, nextCharState);
-      //   this._bg.resize();
-      // } else {
       this._char.updateState(nextCharState);
       this._bg.updateState(nextCharState, this.gametime);
 
@@ -143,7 +142,7 @@ class Playground {
       }
       players = updatedPlayers;
 
-      var nextNpcs = nextState["gamestate"]["npcs"];
+      var nextNpcs = nextState["worldstate"]["npcs"];
       List<NPC> updatedNpcs = [];
       if (nextNpcs != null) {
         for (var nextNpcState in nextNpcs.values) {
@@ -162,7 +161,7 @@ class Playground {
       }
       npcs = updatedNpcs;
 
-      var nextBullets = nextState["gamestate"]["bullets"];
+      var nextBullets = nextState["worldstate"]["bullets"];
       List<Bullet> updatedBullets = [];
       if (nextBullets != null) {
         for (var nextBulletState in nextBullets.values) {
@@ -181,6 +180,8 @@ class Playground {
         }
       }
       bullets = updatedBullets;
+    } else {
+      print("Player not in list");
     }
   }
 
@@ -238,8 +239,8 @@ class Playground {
   void init(String updateString) {
     var data = jsonDecode(updateString);
     this._char = Character.fromJson(data["player"]);
-    this._bg = Background(data["gamestate"]["world"], data["player"]);
     this._char.resize();
+    this._bg = Background(data["worldstate"]["world"], data["player"]);
     this._bg.resize();
   }
 

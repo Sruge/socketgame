@@ -73,9 +73,9 @@ class Character extends Entity {
       mmoGame.addToSocket(
           btnBarResults[0].toString(),
           (details.globalPosition.dx - screenSize.width / 2) /
-              (screenSize.width / 2),
+              scaledScreenSizeWidth,
           (details.globalPosition.dy - screenSize.height / 2) /
-              (screenSize.height / 2));
+              scaledScreenSizeHeight);
     }
   }
 

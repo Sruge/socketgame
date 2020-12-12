@@ -21,13 +21,12 @@ class MMOGame extends Game with TapDetector {
   Socket socket;
   StringBuffer _buffer;
   StreamSubscription _sub;
+  bool parsingPlayer = false;
+  String nextUpdateState;
+  int nextUpdateTime;
 
   MMOGame() {
     _fn = _init;
-  }
-
-  void onPauseHandler() {
-    print('on Pause');
   }
 
   Future<void> _init(double t) async {
@@ -36,6 +35,7 @@ class MMOGame extends Game with TapDetector {
     playground.gametime = 0;
     _fn = _update;
     _buffer = StringBuffer("");
+    nextUpdateTime = DateTime.now().millisecondsSinceEpoch;
 
     Util flameUtils = Util();
     await flameUtils.fullScreen();
@@ -43,19 +43,19 @@ class MMOGame extends Game with TapDetector {
 
     socket = await Socket.connect('217.182.216.146', 5555);
     print('connected');
-    socket.add(utf8.encode("Gerus"));
-    // listen to the received data event stream
     _sub = socket.listen((List<int> event) {});
+    // listen to the received data event stream
 
     _sub.onData((data) {
       onSocketEvent(utf8.decode(data));
     });
+    socket.add(utf8.encode("Gerus"));
 
     _sub.onDone(() async {
       while (true) {
-        socket = await Socket.connect('217.182.216.146', 5555);
+        //socket = await Socket.connect('217.182.216.146', 5555);
         await Future.delayed(Duration(seconds: 3));
-        _sub = socket.listen((List<int> event) {});
+        //_sub = socket.listen((List<int> event) {});
       }
     });
 
@@ -64,21 +64,9 @@ class MMOGame extends Game with TapDetector {
     }
 
     _sub.onError(handleError);
-
-    // send hello
-
-    // wait 5 seconds
-    //await Future.delayed(Duration(seconds: 1));
-
-    // .. and close the socket
-    //socket.close();
   }
 
   void onTapDown(TapDownDetails details) {
-    // double x = (details.globalPosition.dx - screenSize.width / 2) /
-    //     (screenSize.width / 2);
-    // double y = (details.globalPosition.dy - screenSize.height / 2) /
-    //     (screenSize.height / 2);
     playground.onTapDown(details);
   }
 
@@ -102,17 +90,17 @@ class MMOGame extends Game with TapDetector {
   void lifecycleStateChange(AppLifecycleState state) {
     if (AppLifecycleState.detached == state) {
       _sub.cancel();
+      socket.close();
     } else if (AppLifecycleState.paused == state) {
-      _sub.cancel();
+      _sub.pause();
     } else if (AppLifecycleState.resumed == state) {
       _sub.resume();
     } else if (AppLifecycleState.inactive == state) {
-      _sub.cancel();
+      _sub.pause();
     }
   }
 
   void onSocketEvent(String event) {
-    bool parsingPlayer = false;
     for (int i = 0; i < event.length; i++) {
       if (event[i] == "#") {
         _buffer.clear();
@@ -128,7 +116,10 @@ class MMOGame extends Game with TapDetector {
             String updateString = _buffer.toString();
             _buffer.clear();
             if (playground.isInitialized()) {
-              playground.updateState(updateString);
+              //while (DateTime.now().millisecondsSinceEpoch < nextUpdateTime) {}
+              nextUpdateState = updateString;
+              playground.updateState(nextUpdateState);
+              nextUpdateTime = DateTime.now().millisecondsSinceEpoch + 50;
             }
           }
         } else {

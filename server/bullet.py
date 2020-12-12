@@ -11,7 +11,7 @@ class Bullet:
         self.destination_x = dest_x
         self.destination_y = dest_y
         self.vel_x = 400 * dest_x / (abs(dest_x) + abs(dest_y))
-        self.vel_y = 200 * dest_y / (abs(dest_x) + abs(dest_y))
+        self.vel_y = 400 * dest_y / (abs(dest_x) + abs(dest_y))
         self.id = id
         self.bullettype = bullettype
         self.rect = pygame.Rect((x + 400,y + 500),(200,200))
