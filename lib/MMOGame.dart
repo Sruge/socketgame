@@ -24,6 +24,7 @@ class MMOGame extends Game with TapDetector {
   bool parsingPlayer = false;
   String nextUpdateState;
   int nextUpdateTime;
+  double _sendTimer = 0;
 
   MMOGame() {
     _fn = _init;
@@ -71,6 +72,7 @@ class MMOGame extends Game with TapDetector {
   }
 
   void _update(double t) {
+    _sendTimer += t;
     playground.update(t);
   }
 
@@ -130,11 +132,14 @@ class MMOGame extends Game with TapDetector {
   }
 
   void addToSocket(String mode, double x, double y) {
-    Map<String, dynamic> destination = {
-      "mode": mode,
-      "x": x,
-      "y": y,
-    };
-    socket.add(utf8.encode(jsonEncode(destination)));
+    if (_sendTimer > 0.4) {
+      Map<String, dynamic> destination = {
+        "mode": mode,
+        "x": x,
+        "y": y,
+      };
+      socket.add(utf8.encode(jsonEncode(destination)));
+      _sendTimer = 0;
+    }
   }
 }

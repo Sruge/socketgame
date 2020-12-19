@@ -54,7 +54,7 @@ def main_thread():
 		except Exception as e:
 			print("Exception: ", e)
 
-		time.sleep(0.05)
+		time.sleep(0.1)
 
 
 # MAINLOOP
@@ -96,9 +96,7 @@ def threaded_client(conn, _id):
 				game.add_bullet(current_id, dest_x, dest_y)			
 			elif (mode == "CharacterMode.WorldChange"):
 				player = game.change_world_for_player(current_id)
-				print(player.toJson())
 				send_data = "#" +  json.dumps({"player": player.toJson(), "worldstate":game.return_world_for_player(current_id)}) + ";" 
-				print("sending: ", send_data)
 				conn[0].sendall(send_data.encode("utf-8"))	
 		except Exception as e:
 			print(e)

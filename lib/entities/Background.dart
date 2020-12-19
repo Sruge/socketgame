@@ -80,14 +80,14 @@ class Background extends Entity {
     double velY = 0;
     if (dx != 0) {
       velX =
-          dx * timeFactor / (dx.abs() + dy.abs()) * scaledScreenSizeWidth * 150;
+          dx * timeFactor / (dx.abs() + dy.abs()) * scaledScreenSizeWidth * 245;
     }
     if (dy != 0) {
       velY = dy *
           timeFactor /
           (dx.abs() + dy.abs()) *
           scaledScreenSizeHeight *
-          150;
+          245;
     }
 
     //If moving the object according to its velocity would
@@ -108,6 +108,9 @@ class Background extends Entity {
 
     for (Thing thing in things) {
       thing.updatePosition(velX, velY);
+    }
+    for (Door door in doors) {
+      door.updatePosition(velX, velY);
     }
   }
 

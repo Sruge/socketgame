@@ -84,14 +84,14 @@ class AnimatedEntity extends Entity {
 
     if (dx != 0) {
       _velX =
-          dx * timeFactor / (dx.abs() + dy.abs()) * scaledScreenSizeWidth * 150;
+          dx * timeFactor / (dx.abs() + dy.abs()) * scaledScreenSizeWidth * 245;
     }
     if (dy != 0) {
       _velY = dy *
           timeFactor /
           (dx.abs() + dy.abs()) *
           scaledScreenSizeHeight *
-          150;
+          245;
     }
     if ((dx > 0 &&
                 animatedEntity.x + _velX > _nextState[1 - _stateIndex]["x"] ||

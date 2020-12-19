@@ -33,10 +33,10 @@ class Playground {
 
   void onTapDown(TapDownDetails details) {
     if (_bg != null) {
-      //_char.onTapDown(details);
       _bg.doors.forEach((element) {
         element.onTapDown(details);
       });
+      _char.onTapDown(details);
     }
   }
 

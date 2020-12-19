@@ -41,6 +41,7 @@ class World:
 
     def add_bullet(self, playerId, dest_x, dest_y):
         self.bullets[self.bullet_id] = Bullet(self.bullet_id, playerId, self.players[playerId].rect.x, self.players[playerId].rect.y, dest_x, dest_y, "standard")
+        self.bullets[self.bullet_id].update(self)
         self.bullet_id += 1
         
     def update(self):

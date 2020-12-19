@@ -48,7 +48,7 @@ class BaseEntity extends Entity {
       _velY = dy *
           timeFactor /
           (dx.abs() + dy.abs()) *
-          200 *
+          400 *
           screenSize.height /
           10000;
     }

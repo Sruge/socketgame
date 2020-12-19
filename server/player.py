@@ -23,8 +23,8 @@ class Player:
     def update(self, world):
         x = (self.destination_x - self.rect.center[0]) 
         y = (self.destination_y - self.rect.center[1]) 
-        self.vel_x = 150 * x / (abs(x) + abs(y))
-        self.vel_y = 150 * y / (abs(x) + abs(y))
+        self.vel_x = 250 * x / (abs(x) + abs(y))
+        self.vel_y = 250 * y / (abs(x) + abs(y))
         self.check_border_boundary_reached(world)
         self.check_object_intersect(world)
         self.check_destination_reached()
